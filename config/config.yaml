@@ -1,0 +1,9 @@
+world: 'Town05'
+simulation:
+  spawn_vehicles: true
+  use_camera: true
+  synchronous_mode: false
+  ego_vehicle_bp_id: 'vehicle.tesla.model3'
+  rgb_camera_id: 'sensor.camera.rgb'
+  collision_sensor_id: 'sensor.other.collision'
+  ego_vehicle_ap: false
