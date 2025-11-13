@@ -16,6 +16,7 @@ class Vehicle:
 
         self.spawn_point = spawn_point or random.choice(world.get_map().get_spawn_points())
         self.actor = None
+        self.agent = None
 
     def set_attribute(self, id: str, value: str) -> None:
         self.bp.set_attribute(id, value)
@@ -23,6 +24,9 @@ class Vehicle:
     def spawn(self) -> carla.Actor:
         self.actor = self.world.try_spawn_actor(self.bp, self.spawn_point)
         return self.actor
+    
+    def set_agent(self, agent):
+        self.agent = agent(self.actor)
     
     def enable_autopilot(self, enabled=True) -> None:
         if self.actor:
@@ -39,3 +43,4 @@ class Vehicle:
             print(f"Destroying actor id={self.actor.id}")
             self.actor.destroy()
             self.actor = None
+

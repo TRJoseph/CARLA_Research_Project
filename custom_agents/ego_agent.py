@@ -2,13 +2,16 @@ import carla
 
 from agents.navigation.basic_agent import BasicAgent
 
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+
 class EgoAgent(BasicAgent):
     def __init__(self, vehicle, target_speed=20, debug=False):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param target_speed: speed (in Km/h) at which the vehicle will move
         """
-        super().__init__(target_speed, debug)
+
+        super().__init__(vehicle, target_speed)
 
     def run_step(self, debug=False):
         """

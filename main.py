@@ -9,8 +9,6 @@ from actors.vehicle import Vehicle
 from actors.rgbcam import RGBCam
 from carla_env import CarlaEnv
 
-from agents.navigation.basic_agent import BasicAgent
-
 def main():
     c_env = CarlaEnv()
 
@@ -41,23 +39,26 @@ def main():
 
         # toggle_autopilot(vehicles)
         # 
-
+        
+        #c_env.draw_world_spawn_points()
 
         c_env.reset()
 
         spectator = c_env.world.get_spectator()
-        transform = c_env.ego_vehicle.actor.get_transform()
+        transform = c_env.ego_vehicle.spawn_point
         spectator.set_transform(carla.Transform(transform.location + carla.Location(z=20), carla.Rotation(pitch=-90)))
 
         print("Simulation running... Press Ctrl+C to stop.")
 
         while True:
-            time.sleep(0.1)
+            #time.sleep(0.1)
+            c_env.step_forward()
     except KeyboardInterrupt:
         print("Stopping simulation...")
     finally:
         print("Cleaning up...")
         c_env.cleanup()
+        c_env.step_forward()
 
 
 if __name__ == '__main__':

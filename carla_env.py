@@ -8,6 +8,8 @@ from core.cleanup import cleanup as clu
 from actors.vehicle import Vehicle
 from actors.rgbcam import RGBCam
 
+from custom_agents.ego_agent import EgoAgent
+
 class CarlaEnv:
 
     def load_carla_config(self, config_path="config/config.yaml"):
@@ -23,6 +25,8 @@ class CarlaEnv:
     def set_world_settings(self):
         settings = self.world.get_settings()
         settings.synchronous_mode = self.config["simulation"]["synchronous_mode"]
+        settings.fixed_delta_seconds = self.config["simulation"]["time_step"]
+        self.world.apply_settings(settings)
 
     def __init__(self):
         self.config = self.load_carla_config()
@@ -31,9 +35,10 @@ class CarlaEnv:
         self.client.load_world(self.config["world"])
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
+        self.world_spawn_points = self.world.get_map().get_spawn_points()
 
         # to change vehicle change config bp id
-        self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"])
+        self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["egp_vehicle_spawn_point"]])
 
         self.set_world_settings()
 
@@ -42,8 +47,9 @@ class CarlaEnv:
         self.actor_list = []
 
         self.ego_vehicle.spawn()
+        self.ego_vehicle.set_agent(EgoAgent)
         self.actor_list.append(self.ego_vehicle.actor)
-        print(self.ego_vehicle.spawn_point)
+        #print(self.ego_vehicle.spawn_point)
 
         transform = carla.Transform(carla.Location(x=2.5, z=0.7))
 
@@ -68,6 +74,19 @@ class CarlaEnv:
 
         # TODO: take action on collision
         self.col_sensor.listen(lambda event: self.collision_data(event))
+
+        #self.ego_vehicle.enable_autopilot()
+
+    def step_forward(self):
+        self.world.tick()
+
+    def draw_world_spawn_points(self):
+        for i, spawn_point in enumerate(self.world_spawn_points):
+            # Draw in the spectator window the spawn point index
+            self.world.debug.draw_string(spawn_point.location, str(i), life_time=100)
+            # We can also draw an arrow to see the orientation of the spawn point
+            # (i.e. which way the vehicle will be facing when spawned)
+            self.world.debug.draw_arrow(spawn_point.location, spawn_point.location + spawn_point.get_forward_vector(), life_time=100)
 
     def cleanup(self):
         clu(self.client, self.actor_list)
