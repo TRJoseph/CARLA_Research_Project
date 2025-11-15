@@ -37,6 +37,10 @@ class Vehicle:
 
     def get_transform(self):
         return self.actor.get_transform()
+    
+    def step_vehicle(self):
+        control = self.agent.run_step()
+        self.apply_control(control)
 
     def destroy(self):
         if self.actor:

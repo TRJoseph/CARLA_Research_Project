@@ -35,7 +35,10 @@ class CarlaEnv:
         self.client.load_world(self.config["world"])
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
-        self.world_spawn_points = self.world.get_map().get_spawn_points()
+        self.map = self.world.get_map()
+        self.world_spawn_points = self.map.get_spawn_points()
+        #self.waypoints = self.map.generate_waypoints(2)
+
 
         # to change vehicle change config bp id
         self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["egp_vehicle_spawn_point"]])
@@ -76,8 +79,12 @@ class CarlaEnv:
         self.col_sensor.listen(lambda event: self.collision_data(event))
 
         #self.ego_vehicle.enable_autopilot()
+        
 
     def step_forward(self):
+        # applies the Vehicle's Agent run_step method
+        self.ego_vehicle.step_vehicle()
+
         self.world.tick()
 
     def draw_world_spawn_points(self):
@@ -92,3 +99,4 @@ class CarlaEnv:
         clu(self.client, self.actor_list)
         self.actor_list = []
         self.collision_hist = []
+

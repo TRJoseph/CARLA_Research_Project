@@ -9,3 +9,4 @@ simulation:
   collision_sensor_id: 'sensor.other.collision'
   ego_vehicle_ap: false
   time_step: 0.05
+  draw_spawn_points: true
