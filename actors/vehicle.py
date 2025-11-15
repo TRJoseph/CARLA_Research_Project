@@ -27,6 +27,9 @@ class Vehicle:
     
     def set_agent(self, agent):
         self.agent = agent(self.actor)
+
+    def set_vehicle_route(self, start_location, end_location):
+        self.agent.set_route(start_location, end_location)
     
     def enable_autopilot(self, enabled=True) -> None:
         if self.actor:

@@ -11,18 +11,27 @@ class EgoAgent(BasicAgent):
         :param vehicle: actor to apply to local planner logic onto
         :param target_speed: speed (in Km/h) at which the vehicle will move
         """
+        self.route = None
 
         super().__init__(vehicle, target_speed)
 
 
     def set_route(self, start_location, end_location):
-
         # Use global planner to get route
-        route = self._global_planner.trace_route(start_location, end_location)
+        self.route = self._global_planner.trace_route(start_location, end_location)
         
         # Feed route to local planner
-        self._local_planner.set_global_plan(route)
+        self._local_planner.set_global_plan(self.route)
     
+
+    ## TODO: Maybe put all debug-related stuff in its own class?
+    def draw_route_debug(self):
+        try:
+            for idx, waypoint in enumerate(self.route):
+                self._world.debug.draw_string(waypoint[0].transform.location, f"WP {idx+1}", life_time=100)
+        except Exception as e:
+            print("Please ensure a route is set first.")
+
 
     def run_step(self, debug=False):
         """

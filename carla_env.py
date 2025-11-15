@@ -41,7 +41,7 @@ class CarlaEnv:
 
 
         # to change vehicle change config bp id
-        self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["egp_vehicle_spawn_point"]])
+        self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["ego_vehicle_spawn_point"]])
 
         self.set_world_settings()
 
@@ -67,7 +67,7 @@ class CarlaEnv:
         self.rgb_cam.start_listening()
 
         self.ego_vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
-        time.sleep(4)
+        # time.sleep(4)
 
 
         # TODO: maybe make a sensor class? have different sensor inherit from it
@@ -79,6 +79,10 @@ class CarlaEnv:
         self.col_sensor.listen(lambda event: self.collision_data(event))
 
         #self.ego_vehicle.enable_autopilot()
+
+        self.ego_vehicle.set_vehicle_route(self.ego_vehicle.get_transform().location, self.world_spawn_points[88].location)
+
+        self.ego_vehicle.agent.draw_route_debug()
         
 
     def step_forward(self):
