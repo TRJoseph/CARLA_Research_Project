@@ -6,6 +6,8 @@ import time
 from core.cleanup import cleanup as clu
 
 from actors.vehicle import Vehicle
+from actors.ego_vehicle import EgoVehicle
+
 from actors.rgbcam import RGBCam
 
 from custom_agents.ego_agent import EgoAgent
@@ -39,19 +41,18 @@ class CarlaEnv:
         self.world_spawn_points = self.map.get_spawn_points()
         #self.waypoints = self.map.generate_waypoints(2)
 
-
         # to change vehicle change config bp id
-        self.ego_vehicle = Vehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["ego_vehicle_spawn_point"]])
+        self.ego_vehicle = EgoVehicle(self.world, self.config["simulation"]["ego_vehicle_bp_id"], self.world_spawn_points[self.config["simulation"]["ego_vehicle_spawn_point"]])
 
         self.set_world_settings()
 
     def reset(self):
         self.collision_hist = []
-        self.actor_list = []
+        #self.actor_list = []
 
-        self.ego_vehicle.spawn()
-        self.ego_vehicle.set_agent(EgoAgent)
-        self.actor_list.append(self.ego_vehicle.actor)
+        # self.ego_vehicle.spawn()
+        # self.ego_vehicle.set_agent(EgoAgent)
+        #self.actor_list.append(self.ego_vehicle.actor)
         #print(self.ego_vehicle.spawn_point)
 
         transform = carla.Transform(carla.Location(x=2.5, z=0.7))
@@ -61,7 +62,7 @@ class CarlaEnv:
         self.rgb_cam.set_attribute("image_size_x", self.rgb_cam.IM_WIDTH)
         self.rgb_cam.set_attribute("image_size_y", self.rgb_cam.IM_HEIGHT)
         self.rgb_cam.spawn()
-        self.actor_list.append(self.rgb_cam.actor)
+        #self.actor_list.append(self.rgb_cam.actor)
 
         # tells camera sensor to start processing image data
         self.rgb_cam.start_listening()
@@ -73,17 +74,19 @@ class CarlaEnv:
         # TODO: maybe make a sensor class? have different sensor inherit from it
         col_sensor = self.blueprint_library.find(self.config["simulation"]["collision_sensor_id"])
         self.col_sensor = self.world.spawn_actor(col_sensor, transform, attach_to=self.ego_vehicle.actor)
-        self.actor_list.append(self.col_sensor)
+        #self.actor_list.append(self.col_sensor)
 
         # TODO: take action on collision
         self.col_sensor.listen(lambda event: self.collision_data(event))
 
         #self.ego_vehicle.enable_autopilot()
 
-        self.ego_vehicle.set_vehicle_route(self.ego_vehicle.get_transform().location, self.world_spawn_points[88].location)
+        self.ego_vehicle.set_vehicle_route(self.ego_vehicle.get_transform().location, self.world_spawn_points[121].location)
 
         self.ego_vehicle.agent.draw_route_debug()
-        
+    
+    def get_actor_list(self) -> carla.ActorList:
+        return self.world.get_actors()
 
     def step_forward(self):
         # applies the Vehicle's Agent run_step method

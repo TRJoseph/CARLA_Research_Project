@@ -12,7 +12,7 @@ from carla_env import CarlaEnv
 def main():
     c_env = CarlaEnv()
     try:
-        if c_env.config["simulation"]["draw_spawn_points"]:
+        if c_env.config["debug"]["draw_spawn_points"]:
             c_env.draw_world_spawn_points()
 
         c_env.reset()
