@@ -48,12 +48,6 @@ class CarlaEnv:
 
     def reset(self):
         self.collision_hist = []
-        #self.actor_list = []
-
-        # self.ego_vehicle.spawn()
-        # self.ego_vehicle.set_agent(EgoAgent)
-        #self.actor_list.append(self.ego_vehicle.actor)
-        #print(self.ego_vehicle.spawn_point)
 
         transform = carla.Transform(carla.Location(x=2.5, z=0.7))
 
@@ -68,8 +62,6 @@ class CarlaEnv:
         self.rgb_cam.start_listening()
 
         self.ego_vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
-        # time.sleep(4)
-
 
         # TODO: maybe make a sensor class? have different sensor inherit from it
         col_sensor = self.blueprint_library.find(self.config["simulation"]["collision_sensor_id"])
@@ -81,7 +73,7 @@ class CarlaEnv:
 
         #self.ego_vehicle.enable_autopilot()
 
-        self.ego_vehicle.set_vehicle_route(self.ego_vehicle.get_transform().location, self.world_spawn_points[121].location)
+        self.ego_vehicle.set_vehicle_route(self.ego_vehicle.get_transform().location, self.world_spawn_points[self.config["simulation"]["ego_vehicle_target_point"]].location)
 
         self.ego_vehicle.agent.draw_route_debug()
     
@@ -103,7 +95,6 @@ class CarlaEnv:
             self.world.debug.draw_arrow(spawn_point.location, spawn_point.location + spawn_point.get_forward_vector(), life_time=100)
 
     def cleanup(self):
-        clu(self.client, self.actor_list)
-        self.actor_list = []
+        clu(self.client, self.get_actor_list())
         self.collision_hist = []
 

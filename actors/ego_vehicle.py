@@ -14,5 +14,5 @@ class EgoVehicle(Vehicle):
         # different agents can impose different control schemas to the vehicle
         super().set_agent(EgoAgent)
 
-        self.model = BicycleModel(self.actor)
+        #self.model = BicycleModel(self.actor)
 

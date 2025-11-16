@@ -5,8 +5,6 @@ import yaml
 from core.spawn_utils import *
 from core.autopilot import *
 from core.cleanup import *
-from actors.vehicle import Vehicle
-from actors.rgbcam import RGBCam
 from carla_env import CarlaEnv
 
 def main():
