@@ -3,21 +3,23 @@ import numpy as np
 class BicycleModel:
 
     """ 
-    x is the state vector comprised of [x pos; y pos; yaw angle; velocity]
-    
+    This is my attempt at modeling a Tesla Model 3 with a simplified bicycle model approach.
+    Instead of tracking two separate parallel links from front to rear wheels, we can simpify the approach with one central link.
+    This works well for highway driving.
+
     """
-
-
-
-    # x0 is the initial state vector for the model
     def __init__(self, params):
+        self.Dim_state = 4
+        self.Dim_ctrl  = 2
 
+        self.wheelbase = params["wheelbase"]
         self.L_f = params["L_f"]
         self.L_r = params["L_r"]
         self.a_lim = params["a_lim"]
         self.delta_lim = params["delta_lim"]
+        self.h = 0.05
 
-        pass
+        self.initial_state = params["initial_state"]
 
     # calculates state dynamics for the bicycle model
     def Fun_dynamics_dt(self, x, u):

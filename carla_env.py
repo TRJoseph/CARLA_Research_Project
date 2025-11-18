@@ -69,7 +69,7 @@ class CarlaEnv:
         #self.actor_list.append(self.col_sensor)
 
         # TODO: take action on collision
-        self.col_sensor.listen(lambda event: self.collision_data(event))
+        #self.col_sensor.listen(lambda event: self.collision_data(event))
 
         #self.ego_vehicle.enable_autopilot()
 

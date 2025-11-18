@@ -25,8 +25,8 @@ class Vehicle:
         self.actor = self.world.try_spawn_actor(self.bp, self.spawn_point)
         return self.actor
     
-    def set_agent(self, agent):
-        self.agent = agent(self.actor)
+    def set_agent(self, agent, controller=None):
+        self.agent = agent(self.actor, controller)
 
     def set_vehicle_route(self, start_location, end_location):
         self.agent.set_route(start_location, end_location)
