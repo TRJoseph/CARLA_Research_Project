@@ -67,6 +67,8 @@ class EgoVehicle(Vehicle):
             "L_r": L_r,
             "delta_lim": [-np.deg2rad(front_left_wheel.max_steer_angle),np.deg2rad(front_left_wheel.max_steer_angle)],
             "a_lim": [-10, 4],
+            "dt": 0.05,
+            "horizon": 10,
             # x is the initial state vector comprised of [x pos; y pos; yaw angle; velocity]
             "initial_state": np.array([vehicle_midpoint.x, vehicle_midpoint.y, np.deg2rad(self.get_transform().rotation.yaw), 0.1])
         }

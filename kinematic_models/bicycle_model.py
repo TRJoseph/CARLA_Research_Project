@@ -17,7 +17,8 @@ class BicycleModel:
         self.L_r = params["L_r"]
         self.a_lim = params["a_lim"]
         self.delta_lim = params["delta_lim"]
-        self.h = 0.05
+        self.h = params["dt"]
+        self.horizon = params["horizon"]
 
         self.initial_state = params["initial_state"]
 

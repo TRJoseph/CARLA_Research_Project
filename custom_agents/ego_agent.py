@@ -102,7 +102,7 @@ class EgoAgent(BasicAgent):
         # Get upcoming waypoints for MPC reference
         #waypoint_buffer = self._local_planner.get_plan()
 
-        N = 1
+        N = 10
 
         x_bar = np.zeros((N + 1, 4))
         u_bar = np.zeros((N, 2))
@@ -129,6 +129,8 @@ class EgoAgent(BasicAgent):
             for _ in range(num_waypoint_removed):
                 self._local_planner._waypoints_queue.popleft()
 
+        while len(self._local_planner._waypoints_queue) < self.model.horizon:
+            self._local_planner._compute_next_waypoints(k=self._local_planner._min_waypoint_queue_length)
         waypoint_buffer = self._local_planner.get_plan()
 
         x0 = self.owner_vehicle_reference.get_current_state()
