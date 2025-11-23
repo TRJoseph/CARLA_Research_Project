@@ -17,6 +17,7 @@ class EgoAgent(BasicAgent):
         self.route = None
         self.controller = controller
         self.model = model
+        self.horizon = 10
 
         super().__init__(vehicle.actor, target_speed)
 
@@ -86,7 +87,13 @@ class EgoAgent(BasicAgent):
 
         return np.array([accel, delta])
 
+    # TODO: testing for linearized control with the cvxpy library
+    def control_linear_cvxpy(self):
+        print("implement")
 
+    # TODO: testing for nonlinearized control with the casadi library
+    def control_nonlinear_casadi(self):
+        print("implement")
 
     def run_step(self, debug=False):
         """
@@ -102,7 +109,7 @@ class EgoAgent(BasicAgent):
         # Get upcoming waypoints for MPC reference
         #waypoint_buffer = self._local_planner.get_plan()
 
-        N = 10
+        N = self.horizon
 
         x_bar = np.zeros((N + 1, 4))
         u_bar = np.zeros((N, 2))
@@ -129,13 +136,15 @@ class EgoAgent(BasicAgent):
             for _ in range(num_waypoint_removed):
                 self._local_planner._waypoints_queue.popleft()
 
-        while len(self._local_planner._waypoints_queue) < self.model.horizon:
+        while len(self._local_planner._waypoints_queue) < self.horizon:
             self._local_planner._compute_next_waypoints(k=self._local_planner._min_waypoint_queue_length)
         waypoint_buffer = self._local_planner.get_plan()
 
         x0 = self.owner_vehicle_reference.get_current_state()
         #x_bar[0, :] = self.owner_vehicle_reference.get_current_state()
-        x_bar[0, :] = x0
+        #x_bar[0, :] = x0
+
+        wp_horizon = []
 
         for k in range(N):
             waypoint, _ = waypoint_buffer[k]
@@ -144,18 +153,21 @@ class EgoAgent(BasicAgent):
                 waypoint.transform.location.x,
                 waypoint.transform.location.y,
                 self.wrap_to_pi(np.deg2rad(waypoint.transform.rotation.yaw)),
-                self._target_speed / 3.6
+                self._target_speed / 3.6 # km/h to meters per second
             ])
 
-            # use proper nominal guess
-            u_act = self.compute_nominal_guess(x_bar[k, :], ref_state)
-            u_bar[k, :] = u_act
+            wp_horizon.append(ref_state)
 
-            # propagate dynamics from current state
-            x_bar[k + 1, :] = self.model.Fun_dynamics_dt(x_bar[k, :], u_act)
-            x_bar[k + 1, 2] = self.wrap_to_pi(x_bar[k + 1, 2])
+            # # use proper nominal guess
+            # u_act = self.compute_nominal_guess(x_bar[k, :], ref_state)
+            # u_bar[k, :] = u_act
 
-        ctrl_result = self.controller.compute_control(x_bar, u_bar, x0)
+            # # propagate dynamics from current state
+            # x_bar[k + 1, :] = self.model.Fun_dynamics_dt(x_bar[k, :], u_act)
+            # x_bar[k + 1, 2] = self.wrap_to_pi(x_bar[k + 1, 2])
+
+        #ctrl_result = self.controller.compute_control_casadi(x_bar, u_bar, x0)
+        ctrl_result = self.controller.compute_control_casadi_nonlinear(np.array(wp_horizon), x0)
 
         ctrl_action = self.mpc_to_carla_control(ctrl_result)
 

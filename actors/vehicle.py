@@ -41,6 +41,9 @@ class Vehicle:
     def get_transform(self):
         return self.actor.get_transform()
     
+    def get_vehicle_physics(self):
+        return self.actor.get_physics_control()
+    
     def step_vehicle(self):
         control = self.agent.run_step()
         self.apply_control(control)

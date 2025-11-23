@@ -13,6 +13,7 @@ class EgoVehicle(Vehicle):
         super().__init__(world, bp, spawn_point)
         super().spawn()
 
+        #self.physics = self.get_vehicle_physics()
         self.model_params = self.compute_model_params()
 
         self.model = BicycleModel(self.model_params)
@@ -36,12 +37,13 @@ class EgoVehicle(Vehicle):
 
     def compute_model_params(self):
         self.physics = self.actor.get_physics_control()
-
         front_left_wheel = self.physics.wheels[0]
         front_right_wheel = self.physics.wheels[1]
         back_left_wheel = self.physics.wheels[2]
         back_right_wheel = self.physics.wheels[3]
 
+
+        # uncomment for 3d model calculations
         front_axle_midpoint = np.array([
         (front_left_wheel.position.x + front_right_wheel.position.x) / 2.0,
         (front_left_wheel.position.y + front_right_wheel.position.y) / 2.0,
@@ -56,6 +58,21 @@ class EgoVehicle(Vehicle):
         vehicle_midpoint = self.get_transform().location
         vehicle_mid_pos = np.array([vehicle_midpoint.x, vehicle_midpoint.y, vehicle_midpoint.z])
 
+        # front_axle_midpoint = np.array([
+        # (front_left_wheel.position.x + front_right_wheel.position.x) / 2.0,
+        # (front_left_wheel.position.y + front_right_wheel.position.y) / 2.0
+        # ]) / 100
+
+        # back_axle_midpoint = np.array([
+        # (back_left_wheel.position.x + back_right_wheel.position.x) / 2.0,
+        # (back_left_wheel.position.y + back_right_wheel.position.y) / 2.0
+        # ])/100
+        
+        # vehicle_state = self.get_current_state()
+        # vehicle_mid_pos = vehicle_state[::1]
+        vehicle_midpoint = self.get_transform().location
+        vehicle_mid_pos = np.array([vehicle_midpoint.x, vehicle_midpoint.y, vehicle_midpoint.z])
+
         # this is the euclidean distance from the front axle to the back axle
         wheelbase = np.linalg.norm(front_axle_midpoint - back_axle_midpoint)
         L_f = np.linalg.norm(front_axle_midpoint - vehicle_mid_pos)
@@ -67,8 +84,7 @@ class EgoVehicle(Vehicle):
             "L_r": L_r,
             "delta_lim": [-np.deg2rad(front_left_wheel.max_steer_angle),np.deg2rad(front_left_wheel.max_steer_angle)],
             "a_lim": [-10, 4],
-            "dt": 0.05,
-            "horizon": 10,
+            "dt": 0.05, # time step
             # x is the initial state vector comprised of [x pos; y pos; yaw angle; velocity]
             "initial_state": np.array([vehicle_midpoint.x, vehicle_midpoint.y, np.deg2rad(self.get_transform().rotation.yaw), 0.1])
         }

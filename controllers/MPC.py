@@ -1,5 +1,6 @@
 import numpy as np
 import cvxpy as cp
+from casadi import *
 
 
 class MPCController:
@@ -19,10 +20,6 @@ class MPCController:
         # Jacobian of the system dynamics
         A = np.zeros((4, 4))
         B = np.zeros((4, 2))
-
-        #############################################################################
-        #                    TODO: Implement your code here                         #
-        #############################################################################
 
         A = np.array([[1, 0, -dt*v*np.sin(psi+np.arctan((L_r*np.arctan(delta))/(L_f+L_r))), dt*np.cos(psi+np.arctan((L_r*np.arctan(delta))/(L_f+L_r)))],
                     [0, 1, dt*v*np.cos(psi+np.arctan((L_r*np.arctan(delta))/(L_f+L_r))), dt*np.sin(psi+np.arctan((L_r*np.arctan(delta))/(L_f+L_r)))],
@@ -106,3 +103,76 @@ class MPCController:
 
         u_act = x.value[n_x:n_x + dim_ctrl] + ctrl[0, :]
         return u_act
+
+    def compute_control_casadi_nonlinear(self, waypoints, x0):
+        """
+        This function is my practice implementing a nonlinear MPC controller
+        waypoints: target waypoints to track (N x 4) [x, y, yaw, v]
+        x0: current state (4,)
+        """
+        N = waypoints.shape[0] - 1  # horizon length
+        dim_state = 4
+        dim_ctrl = 2
+        
+        # Decision variables (absolute, not deviations)
+        # state vector is [x pos, y pos, yaw angle, velocity]
+        # 4xN vector where N is the horizon waypoint count
+        x = SX.sym("state", dim_state, N+1)
+        u = SX.sym("ctrl", dim_ctrl, N)
+        
+        ### WEIGHT MATRICIES ###
+        Q = np.diag([1000, 1000, 10, 1000])  # weights on [x, y, yaw, v]
+        R = np.diag([0.5, 0.1])      # weights on [a, delta]
+        P = np.diag([10, 10, 20, 50])  # terminal cost
+        
+        cost = 0
+        # build cost from 0 to N
+        for k in range(N):
+            state_error = x[:, k] - SX(waypoints[k, :])
+            cost += dot(state_error, mtimes(Q, state_error))
+            cost += dot(u[:, k], mtimes(R, u[:, k]))
+        
+        # terminal cost
+        terminal_error = x[:, N] - SX(waypoints[N, :])
+        cost += 1000* dot(terminal_error, mtimes(Q, terminal_error))
+
+        constraints = []
+        
+        # initial condition
+        constraints.append(x[:, 0] - SX(x0))
+        
+        # Nonlinear dynamics constraints
+        for k in range(N):
+            x_next = self.model.Fun_dynamics_dt_casadi(x[:, k], u[:, k])
+            constraints.append(x[:, k+1] - x_next)
+        
+        decision_vars = vertcat(reshape(x, -1, 1), reshape(u, -1, 1))
+        g = vertcat(*constraints)
+        nlp = {'x': decision_vars, 'f': cost, 'g': g}
+        
+        opts = {'ipopt.print_level': 0, 'print_time': 0}
+        S = nlpsol('S', 'ipopt', nlp, opts)
+        
+        # Bounds
+        n_x = (N+1) * dim_state
+        n_u = N * dim_ctrl
+        
+        lbg = np.zeros(g.shape[0])
+        ubg = np.zeros(g.shape[0])
+        
+        lbx = np.full(n_x + n_u, -np.inf)
+        ubx = np.full(n_x + n_u, np.inf)
+        
+        # Control bounds (absolute, not relative to reference)
+        lbx[n_x:] = np.tile([self.model.a_lim[0], self.model.delta_lim[0]], N)
+        ubx[n_x:] = np.tile([self.model.a_lim[1], self.model.delta_lim[1]], N)
+        
+        # initial guess just using waypoints and no control guess (maybe tweak this for faster convergence?)
+        x0_guess = np.concatenate([waypoints.flatten('F'), np.zeros(n_u)])
+        
+        # Solve
+        r = S(x0=x0_guess, lbg=lbg, ubg=ubg, lbx=lbx, ubx=ubx)
+        
+        u_opt = r['x'][n_x:n_x+dim_ctrl].full().flatten()
+        
+        return u_opt

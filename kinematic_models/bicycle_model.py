@@ -1,4 +1,5 @@
 import numpy as np
+import casadi as ca
 
 class BicycleModel:
 
@@ -18,7 +19,6 @@ class BicycleModel:
         self.a_lim = params["a_lim"]
         self.delta_lim = params["delta_lim"]
         self.h = params["dt"]
-        self.horizon = params["horizon"]
 
         self.initial_state = params["initial_state"]
 
@@ -36,4 +36,17 @@ class BicycleModel:
         xkp1 = x + xdot * self.h
 
         return xkp1
+    
+    def Fun_dynamics_dt_casadi(self, state, ctrl):
+        x, y, yaw, v = state[0], state[1], state[2], state[3]
+        a, delta = ctrl[0], ctrl[1]
+
+        beta = ca.arctan(self.L_r / (self.L_r + self.L_f) * ca.arctan(delta))
+
+        x_next = x + v*ca.cos(yaw+beta) * self.h
+        y_next = y + v*ca.sin(yaw+beta) * self.h
+        yaw_next = yaw + v/self.L_r * ca.sin(beta) * self.h
+        v_next = v + a * self.h
+
+        return ca.vertcat(x_next, y_next, yaw_next, v_next)
     
